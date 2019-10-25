@@ -61,7 +61,7 @@ These mappings are collected up across the entire transitive dependancies of a
 binary. This means you can set a value using :param:`x_defs` in a
 ``go_library``, and any binary that links that library will be stamped with that
 value. You can also override stamp values from libraries using :param:`x_defs`
-on the ``go_binary`` rule if needed. The ``--[no]stamp`` option controls whether 
+on the ``go_binary`` rule if needed. The ``--[no]stamp`` option controls whether
 stamping of workspace variables is enabled.
 
 Example
@@ -642,6 +642,13 @@ To run a Go benchmark test, run
 
 You can run specific tests by passing the `--test_filter=pattern <test_filter_>`_ argument to Bazel.
 You can pass arguments to tests by passing `--test_arg=arg <test_arg_>`_ arguments to Bazel.
+
+Providers
+^^^^^^^^^
+
+* GoLibrary_
+* GoSource_
+* GoArchive_
 
 Attributes
 ^^^^^^^^^^
