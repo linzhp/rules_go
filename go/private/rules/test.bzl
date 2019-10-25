@@ -169,6 +169,8 @@ def _go_test_impl(ctx):
         dependency_attributes = ["deps", "embed"],
         providers = [
             test_archive,
+            internal_source,
+            internal_library,
             DefaultInfo(
                 files = depset([executable]),
                 runfiles = runfiles,
