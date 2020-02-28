@@ -1,0 +1,15 @@
+diff -urN b/protoc-gen-go/testdata/grpc/BUILD.bazel c/protoc-gen-go/testdata/grpc/BUILD.bazel
+--- b/protoc-gen-go/testdata/grpc/BUILD.bazel	2000-01-01 00:00:00.000000000 -0000
++++ c/protoc-gen-go/testdata/grpc/BUILD.bazel	2000-01-01 00:00:00.000000000 -0000
+@@ -1,5 +1,11 @@
+ load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
++filegroup(
++    name = "go_default_library_protos",
++    srcs = ["grpc.proto"],
++    visibility = ["//visibility:public"],
++)
++
+ go_library(
+     name = "go_default_library",
+     srcs = [

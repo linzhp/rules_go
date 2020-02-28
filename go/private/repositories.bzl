@@ -138,6 +138,9 @@ def go_rules_dependencies():
             "@io_bazel_rules_go//third_party:com_github_golang_protobuf-gazelle.patch",
             # additional targets may depend on generated code for well known types
             "@io_bazel_rules_go//third_party:com_github_golang_protobuf-extras.patch",
+            # protoc-gen-go/testdata/grpc is a different Go module.
+            # Separating this so the above patch can be used by go_repository rules
+            "@io_bazel_rules_go//third_party:com_github_golang_protobuf-testdata-grpc.patch.patch",
         ],
         patch_args = ["-p1"],
     )
