@@ -192,8 +192,10 @@ def has_versioned_shared_lib_extension(path):
         if not parts[i].isdigit():
             if parts[i] == "dylib" or parts[i] == "so":
                 return True
+
             # somehting like foo.bar.1.2
             return False
+
     # something like 1.2.3, or so.1.2, or dylib.1.2, or foo.1.2
     return False
 
