@@ -86,14 +86,15 @@ def _go_pkg_info_aspect_impl(target, ctx):
         pkg = _go_archive_to_pkg(archive)
         pkg_json_files.append(_make_pkg_json(ctx, archive, pkg))
 
-    if ctx.rule.kind == "go_test":
-        for dep_archive in archive.direct:
-            # find the archive containing the test sources
-            if archive.data.label == dep_archive.data.label:
-                pkg = _go_archive_to_pkg(dep_archive)
-                pkg_json_files.append(_make_pkg_json(ctx, dep_archive, pkg))
-                compiled_go_files.extend(dep_archive.source.srcs)
-                export_files.append(dep_archive.data.export_file)
+        if ctx.rule.kind == "go_test":
+            for dep_archive in archive.direct:
+                # find the archive containing the test sources
+                if archive.data.label == dep_archive.data.label:
+                    pkg = _go_archive_to_pkg(dep_archive)
+                    pkg_json_files.append(_make_pkg_json(ctx, dep_archive, pkg))
+                    compiled_go_files.extend(dep_archive.source.srcs)
+                    export_files.append(dep_archive.data.export_file)
+                    break
 
     # If there was no stdlib json in any dependencies, fetch it from the
     # current go_ node.
