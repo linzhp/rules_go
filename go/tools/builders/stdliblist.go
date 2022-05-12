@@ -18,8 +18,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"flag"
-	"fmt"
 	"go/build"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -110,29 +110,29 @@ func stdlibPackageID(importPath string) string {
 	return "@io_bazel_rules_go//stdlib:" + importPath
 }
 
-func execRootPath(execRoot, p string) string {
-	dir, _ := filepath.Rel(execRoot, p)
+func cloneBasePath(cloneBase, p string) string {
+	dir, _ := filepath.Rel(cloneBase, p)
 	return filepath.Join("__BAZEL_OUTPUT_BASE__", dir)
 }
 
-func absoluteSourcesPaths(execRoot, pkgDir string, srcs []string) []string {
+func absoluteSourcesPaths(cloneBase, pkgDir string, srcs []string) []string {
 	ret := make([]string, 0, len(srcs))
-	pkgDir = execRootPath(execRoot, pkgDir)
+	pkgDir = cloneBasePath(cloneBase, pkgDir)
 	for _, src := range srcs {
 		ret = append(ret, filepath.Join(pkgDir, src))
 	}
 	return ret
 }
 
-func flatPackageForStd(execRoot string, pkg *goListPackage) *flatPackage {
+func flatPackageForStd(cloneBase string, pkg *goListPackage) *flatPackage {
 	// Don't use generated files from the stdlib
-	goFiles := absoluteSourcesPaths(execRoot, pkg.Dir, pkg.GoFiles)
+	goFiles := absoluteSourcesPaths(cloneBase, pkg.Dir, pkg.GoFiles)
 
 	newPkg := &flatPackage{
 		ID:              stdlibPackageID(pkg.ImportPath),
 		Name:            pkg.Name,
 		PkgPath:         pkg.ImportPath,
-		ExportFile:      execRootPath(execRoot, pkg.Target),
+		ExportFile:      cloneBasePath(cloneBase, pkg.Target),
 		Imports:         map[string]string{},
 		Standard:        pkg.Standard,
 		GoFiles:         goFiles,
@@ -161,15 +161,13 @@ func flatPackageForStd(execRoot string, pkg *goListPackage) *flatPackage {
 //
 // cloneRoot returns the new root directory and the new GOROOT we should run
 // under.
-func cloneRoot(execRoot, goroot string) (newRoot string, newGoroot string, err error) {
-	relativeGoroot, err := filepath.Rel(abs(execRoot), abs(goroot))
-	if err != nil {
-		// GOROOT has to be a subdirectory of execRoot.
-		// Otherwise we're breaking the sandbox.
-		return "", "", fmt.Errorf("GOROOT %q is not relative to execution root %q: %v", goroot, execRoot)
-	}
+func cloneRoot(cloneBase, relativeGoroot string) (newRoot string, newGoroot string, err error) {
+	goroot := filepath.Join(cloneBase, relativeGoroot)
 
-	newRoot = filepath.Join(execRoot, "root")
+	newRoot, err = ioutil.TempDir(cloneBase, "root-*")
+	if err != nil {
+		return "", "", err
+	}
 	newGoroot = filepath.Join(newRoot, relativeGoroot)
 	if err := os.MkdirAll(newGoroot, 01755); err != nil {
 		return "", "", err
@@ -195,7 +193,7 @@ func stdliblist(args []string) error {
 		return err
 	}
 
-	execRoot, goroot, err := cloneRoot(".", os.Getenv("GOROOT"))
+	cloneBase, goroot, err := cloneRoot(".", goenv.sdk)
 	if err != nil {
 		return err
 	}
@@ -241,7 +239,7 @@ func stdliblist(args []string) error {
 		if err := decoder.Decode(&pkg); err != nil {
 			return err
 		}
-		if err := encoder.Encode(flatPackageForStd(execRoot, pkg)); err != nil {
+		if err := encoder.Encode(flatPackageForStd(cloneBase, pkg)); err != nil {
 			return err
 		}
 	}
