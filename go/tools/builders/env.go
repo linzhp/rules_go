@@ -44,6 +44,9 @@ var (
 // See ./README.rst for more information about handling arguments and
 // environment variables.
 type env struct {
+	// cwd is the path to the working directory
+	wd string
+
 	// sdk is the path to the Go SDK, which contains tools for the host
 	// platform. This may be different than GOROOT.
 	sdk string
@@ -71,6 +74,7 @@ func envFlags(flags *flag.FlagSet) *env {
 	flags.StringVar(&env.installSuffix, "installsuffix", "", "Standard library under GOROOT/pkg")
 	flags.BoolVar(&env.verbose, "v", false, "Whether subprocess command lines should be printed")
 	flags.BoolVar(&env.shouldPreserveWorkDir, "work", false, "if true, the temporary work directory will be preserved")
+	flags.StringVar(&env.wd, "wd", ".", "working director default to dot")
 	return env
 }
 
@@ -121,6 +125,10 @@ func (e *env) goTool(tool string, args ...string) []string {
 // and additional arguments.
 func (e *env) goCmd(cmd string, args ...string) []string {
 	exe := filepath.Join(e.sdk, "bin", "go")
+	if len(e.wd) > 0 {
+		exe = filepath.Join(e.wd, exe)
+	}
+
 	if runtime.GOOS == "windows" {
 		exe += ".exe"
 	}

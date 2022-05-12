@@ -52,8 +52,10 @@ def _should_use_sdk_stdlib(go):
             go.mode.link == LINKMODE_NORMAL)
 
 def _build_stdlib_list_json(go):
+    print("this is the go_sdk_path: %s\n" % go.sdk.root_file.dirname)
     out = go.declare_file(go, "stdlib.pkg.json")
     args = go.builder_args(go, "stdliblist")
+    args.add("-sdk", go.sdk.root_file.dirname)
     args.add("-out", out)
     go.actions.run(
         inputs = go.sdk_files,

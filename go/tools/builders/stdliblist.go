@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"flag"
 	"go/build"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -110,14 +109,17 @@ func stdlibPackageID(importPath string) string {
 	return "@io_bazel_rules_go//stdlib:" + importPath
 }
 
-func cloneBasePath(cloneBase, p string) string {
+// labelledPath replace the cloneBase with output base label
+func labelledPath(cloneBase, p string) string {
 	dir, _ := filepath.Rel(cloneBase, p)
 	return filepath.Join("__BAZEL_OUTPUT_BASE__", dir)
 }
 
+//  absoluteSourcesPaths replace cloneBase of the absolution
+//  paths with the label for all source files in a package
 func absoluteSourcesPaths(cloneBase, pkgDir string, srcs []string) []string {
 	ret := make([]string, 0, len(srcs))
-	pkgDir = cloneBasePath(cloneBase, pkgDir)
+	pkgDir = labelledPath(cloneBase, pkgDir)
 	for _, src := range srcs {
 		ret = append(ret, filepath.Join(pkgDir, src))
 	}
@@ -132,7 +134,7 @@ func flatPackageForStd(cloneBase string, pkg *goListPackage) *flatPackage {
 		ID:              stdlibPackageID(pkg.ImportPath),
 		Name:            pkg.Name,
 		PkgPath:         pkg.ImportPath,
-		ExportFile:      cloneBasePath(cloneBase, pkg.Target),
+		ExportFile:      labelledPath(cloneBase, pkg.Target),
 		Imports:         map[string]string{},
 		Standard:        pkg.Standard,
 		GoFiles:         goFiles,
@@ -153,31 +155,29 @@ func flatPackageForStd(cloneBase string, pkg *goListPackage) *flatPackage {
 // If we run "go list" with that GOROOT, this action will fail because those
 // go:embed directives will refuse to include the symlinks in the sandbox.
 //
-// To work around this, cloneRoot creates a copy of external/go_sdk into a new
-// directory "root" while retaining its path relative to the root directory.
+// To work around this, cloneGoRoot creates a copy of external/go_sdk into a new
+// cloneBase directory while retaining its path relative to the root directory.
 // So "$OUTPUT_BASE/external/go_sdk" becomes
-// "$OUTPUT_BASE/root/external/go_sdk".
+// tmp_directory/external/go_sdk", which will be set at GOROOT later.
 // This ensures that file paths in the generated JSON are still valid.
 //
-// cloneRoot returns the new root directory and the new GOROOT we should run
+// cloneGoRoot returns the new GOROOT we should run
 // under.
-func cloneRoot(cloneBase, relativeGoroot string) (newRoot string, newGoroot string, err error) {
-	goroot := filepath.Join(cloneBase, relativeGoroot)
-
-	newRoot, err = ioutil.TempDir(cloneBase, "root-*")
+func cloneGoRoot(execRoot, relativeGoroot string, cloneBase string) (newGoRoot string, err error) {
+	goroot := filepath.Join(execRoot, relativeGoroot)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
-	newGoroot = filepath.Join(newRoot, relativeGoroot)
-	if err := os.MkdirAll(newGoroot, 01755); err != nil {
-		return "", "", err
-	}
-
-	if err := replicate(goroot, newGoroot, replicatePaths("src", "pkg/tool", "pkg/include")); err != nil {
-		return "", "", err
+	newGoRoot = filepath.Join(cloneBase, relativeGoroot)
+	if err := os.MkdirAll(newGoRoot, 01755); err != nil {
+		return "", err
 	}
 
-	return newRoot, newGoroot, nil
+	if err := replicate(goroot, newGoRoot, replicatePaths("src", "pkg/tool", "pkg/include")); err != nil {
+		return "", err
+	}
+
+	return newGoRoot, nil
 }
 
 // stdliblist runs `go list -json` on the standard library and saves it to a file.
@@ -193,7 +193,15 @@ func stdliblist(args []string) error {
 		return err
 	}
 
-	cloneBase, goroot, err := cloneRoot(".", goenv.sdk)
+	cloneBase, cleanup, err := goenv.workDir()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		cleanup()
+	}()
+
+	cloneGoRoot, err := cloneGoRoot(goenv.wd, goenv.sdk, cloneBase)
 	if err != nil {
 		return err
 	}
@@ -204,7 +212,7 @@ func stdliblist(args []string) error {
 		absPaths = append(absPaths, abs(path))
 	}
 	os.Setenv("PATH", strings.Join(absPaths, string(os.PathListSeparator)))
-	os.Setenv("GOROOT", goroot)
+	os.Setenv("GOROOT", cloneGoRoot)
 	// Make sure we have an absolute path to the C compiler.
 	// TODO(#1357): also take absolute paths of includes and other paths in flags.
 	os.Setenv("CC", abs(os.Getenv("CC")))
@@ -231,7 +239,6 @@ func stdliblist(args []string) error {
 	if err := goenv.runCommandToFile(jsonData, listArgs); err != nil {
 		return err
 	}
-
 	encoder := json.NewEncoder(jsonFile)
 	decoder := json.NewDecoder(jsonData)
 	for decoder.More() {
