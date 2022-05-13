@@ -158,12 +158,12 @@ func flatPackageForStd(cloneBase string, pkg *goListPackage) *flatPackage {
 // To work around this, cloneGoRoot creates a copy of external/go_sdk into a new
 // cloneBase directory while retaining its path relative to the root directory.
 // So "$OUTPUT_BASE/external/go_sdk" becomes
-// tmp_directory/external/go_sdk", which will be set at GOROOT later.
+// {cloneBase}/external/go_sdk", which will be set at GOROOT later.
 // This ensures that file paths in the generated JSON are still valid.
 //
 // cloneGoRoot returns the new GOROOT we should run
 // under.
-func cloneGoRoot(execRoot, relativeGoroot string, cloneBase string) (newGoRoot string, err error) {
+func cloneGoRoot(execRoot, relativeGoroot, cloneBase string) (newGoRoot string, err error) {
 	goroot := filepath.Join(execRoot, relativeGoroot)
 	if err != nil {
 		return "", err
