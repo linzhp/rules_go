@@ -44,7 +44,7 @@ var (
 // See ./README.rst for more information about handling arguments and
 // environment variables.
 type env struct {
-	// cwd is the path to the working directory
+	// wd is the path to the working directory
 	wd string
 
 	// sdk is the path to the Go SDK, which contains tools for the host

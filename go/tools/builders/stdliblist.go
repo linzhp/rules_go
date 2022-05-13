@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"go/build"
 	"os"
 	"path/filepath"
@@ -165,9 +166,6 @@ func flatPackageForStd(cloneBase string, pkg *goListPackage) *flatPackage {
 // under.
 func cloneGoRoot(execRoot, relativeGoroot, cloneBase string) (newGoRoot string, err error) {
 	goroot := filepath.Join(execRoot, relativeGoroot)
-	if err != nil {
-		return "", err
-	}
 	newGoRoot = filepath.Join(cloneBase, relativeGoroot)
 	if err := os.MkdirAll(newGoRoot, 01755); err != nil {
 		return "", err
@@ -197,13 +195,11 @@ func stdliblist(args []string) error {
 	if err != nil {
 		return err
 	}
-	defer func() {
-		cleanup()
-	}()
+	defer func() { cleanup() }()
 
 	cloneGoRoot, err := cloneGoRoot(goenv.wd, goenv.sdk, cloneBase)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to clone new go root %v", err)
 	}
 
 	// Ensure paths are absolute.
