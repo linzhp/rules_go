@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -14,7 +14,7 @@ import (
 
 func Test_stdliblist(t *testing.T) {
 	testDir := t.TempDir()
-	f, _ := ioutil.TempFile(testDir, "*")
+	outJSON := filepath.Join(testDir, "out.json")
 
 	// test files are at run file directory, but this test is run at
 	// {runfile directory}/bazel.TestWorkspace()
@@ -27,7 +27,7 @@ func Test_stdliblist(t *testing.T) {
 		t.Error("failed to find runfiles path")
 	}
 	test_args := []string{
-		fmt.Sprintf("-out=%s", f.Name()),
+		fmt.Sprintf("-out=%s", outJSON),
 		fmt.Sprintf("-sdk=%s", "go_sdk"),
 		fmt.Sprintf("-wd=%s", filepath.Dir(filepath.Clean(runFilesPath))),
 	}
@@ -36,6 +36,11 @@ func Test_stdliblist(t *testing.T) {
 	if err != nil {
 		t.Errorf("calling stdliblist got err: %v", err)
 	}
+	f, err := os.Open(outJSON)
+	if err != nil {
+		t.Errorf("cannot open output json: %v", err)
+	}
+	defer func() { _ = f.Close() }()
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		var result flatPackage

@@ -156,14 +156,15 @@ func flatPackageForStd(cloneBase string, pkg *goListPackage) *flatPackage {
 // If we run "go list" with that GOROOT, this action will fail because those
 // go:embed directives will refuse to include the symlinks in the sandbox.
 //
-// To work around this, cloneGoRoot creates a copy of external/go_sdk into a new
-// cloneBase directory while retaining its path relative to the root directory.
+// To work around this, cloneGoRoot creates a copy of a subset of external/go_sdk
+// that is sufficient to call "go list" into a new cloneBase directory while
+// retaining its path relative to the root directory, e.g. "go list" needs to
+// call "compile", which needs "pkg/tool".
 // So "$OUTPUT_BASE/external/go_sdk" becomes
-// {cloneBase}/external/go_sdk", which will be set at GOROOT later.
-// This ensures that file paths in the generated JSON are still valid.
+// {cloneBase}/external/go_sdk", which will be set at GOROOT later. This ensures
+// that file paths in the generated JSON are still valid.
 //
-// cloneGoRoot returns the new GOROOT we should run
-// under.
+// cloneGoRoot returns the new GOROOT we should run under.
 func cloneGoRoot(execRoot, relativeGoroot, cloneBase string) (newGoRoot string, err error) {
 	goroot := filepath.Join(execRoot, relativeGoroot)
 	newGoRoot = filepath.Join(cloneBase, relativeGoroot)
