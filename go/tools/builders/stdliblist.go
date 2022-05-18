@@ -196,7 +196,7 @@ func stdliblist(args []string) error {
 	}
 	defer func() { cleanup() }()
 
-	newGoRoot := filepath.Join(cloneBase, "go_sdk")
+	newGoRoot := filepath.Join(cloneBase, "external/go_sdk")
 	err = cloneGoRoot(abs(goenv.sdk), abs(newGoRoot))
 	if err != nil {
 		return fmt.Errorf("failed to clone new go root %v", err)

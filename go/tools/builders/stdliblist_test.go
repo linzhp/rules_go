@@ -47,7 +47,7 @@ func Test_stdliblist(t *testing.T) {
 			t.Errorf("export file should be prefixed with __BAZEL_OUTPUT_BASE__ :%s", jsonLineStr)
 		}
 		for _, gofile := range result.GoFiles {
-			if !strings.HasPrefix(gofile, "__BAZEL_OUTPUT_BASE__/go_sdk") {
+			if !strings.HasPrefix(gofile, "__BAZEL_OUTPUT_BASE__/external/go_sdk") {
 				t.Errorf("All go files should be prefixed with __BAZEL_OUTPUT_BASE__/go_sdk :%s", jsonLineStr)
 			}
 		}
