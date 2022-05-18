@@ -34,7 +34,10 @@ go_test(
         "stdliblist_test.go",
     ],
     data = ["@go_sdk//:files"],
-    rundir = ".",
+    # -sdk in stdliblist needs to be a relative path, otherwise it breaks
+    # assumptions of cloning go_sdk, thus we need to set up the test in a
+    # way that go_sdk is under the directory where test is run.
+    rundir = "..",
     deps = ["//go/tools/bazel"],
 )
 

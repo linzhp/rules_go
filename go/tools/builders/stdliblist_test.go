@@ -8,31 +8,22 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/bazelbuild/rules_go/go/tools/bazel"
 )
 
 func Test_stdliblist(t *testing.T) {
 	testDir := t.TempDir()
 	outJSON := filepath.Join(testDir, "out.json")
 
-	// test files are at run file directory, but this test is run at
-	// {runfile directory}/bazel.TestWorkspace()
-	// since -sdk is assumed to be a relative path to execRoot
-	// (go.sdk.root_file.dirname), thus setting wd to
-	// {runfile directory} so that go_sdk is discoverable
-	// {runfile directory} is the parent directory of bazel.RunfilesPath()
-	runFilesPath, err := bazel.RunfilesPath()
-	if err != nil {
-		t.Error("failed to find runfiles path")
-	}
+	// test files are at {runfile directory}/go_sdk,
+	// this test is run at {runfile directory}/{workspace}/../
+	// thus go_sdk is the relative path to current working
+	// directory
 	test_args := []string{
 		fmt.Sprintf("-out=%s", outJSON),
 		fmt.Sprintf("-sdk=%s", "go_sdk"),
-		fmt.Sprintf("-wd=%s", filepath.Dir(filepath.Clean(runFilesPath))),
 	}
 
-	err = stdliblist(test_args)
+	err := stdliblist(test_args)
 	if err != nil {
 		t.Errorf("calling stdliblist got err: %v", err)
 	}

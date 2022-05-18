@@ -157,22 +157,22 @@ func flatPackageForStd(cloneBase string, pkg *goListPackage) *flatPackage {
 // go:embed directives will refuse to include the symlinks in the sandbox.
 //
 // To work around this, cloneGoRoot creates a copy of a subset of external/go_sdk
-// that is sufficient to call "go list" into a new cloneBase directory while
-// retaining its path relative to the root directory, e.g. "go list" needs to
-// call "compile", which needs "pkg/tool".
-// So "$OUTPUT_BASE/external/go_sdk" becomes
+// that is sufficient to call "go list" into a new cloneBase directory, e.g.
+// "go list" needs to call "compile", which needs "pkg/tool".
+// We also need to retain the same relative path to the root directory, e.g.
+// "$OUTPUT_BASE/external/go_sdk" becomes
 // {cloneBase}/external/go_sdk", which will be set at GOROOT later. This ensures
 // that file paths in the generated JSON are still valid.
 //
 // cloneGoRoot returns the new GOROOT we should run under.
-func cloneGoRoot(execRoot, relativeGoroot, cloneBase string) (newGoRoot string, err error) {
-	goroot := filepath.Join(execRoot, relativeGoroot)
-	newGoRoot = filepath.Join(cloneBase, relativeGoroot)
+func cloneGoRoot(relativeGoRoot, cloneBase string) (newGoRoot string, err error) {
+	goRoot := abs(relativeGoRoot)
+	newGoRoot = filepath.Join(cloneBase, relativeGoRoot)
 	if err := os.MkdirAll(newGoRoot, 01755); err != nil {
 		return "", err
 	}
 
-	if err := replicate(goroot, newGoRoot, replicatePaths("src", "pkg/tool", "pkg/include")); err != nil {
+	if err := replicate(goRoot, newGoRoot, replicatePaths("src", "pkg/tool", "pkg/include")); err != nil {
 		return "", err
 	}
 
@@ -198,11 +198,10 @@ func stdliblist(args []string) error {
 	}
 	defer func() { cleanup() }()
 
-	cloneGoRoot, err := cloneGoRoot(goenv.wd, goenv.sdk, cloneBase)
+	cloneGoRoot, err := cloneGoRoot(goenv.sdk, cloneBase)
 	if err != nil {
 		return fmt.Errorf("failed to clone new go root %v", err)
 	}
-
 	// Ensure paths are absolute.
 	absPaths := []string{}
 	for _, path := range filepath.SplitList(os.Getenv("PATH")) {
