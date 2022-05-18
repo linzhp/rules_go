@@ -164,19 +164,17 @@ func flatPackageForStd(cloneBase string, pkg *goListPackage) *flatPackage {
 // {cloneBase}/external/go_sdk", which will be set at GOROOT later. This ensures
 // that file paths in the generated JSON are still valid.
 //
-// cloneGoRoot returns the new GOROOT we should run under.
-func cloneGoRoot(relativeGoRoot, cloneBase string) (newGoRoot string, err error) {
-	goRoot := abs(relativeGoRoot)
-	newGoRoot = filepath.Join(cloneBase, relativeGoRoot)
+// cloneGoRoot replicate goRoot to newGoRoot and returns an error if any.
+func cloneGoRoot(goRoot, newGoRoot string) error {
 	if err := os.MkdirAll(newGoRoot, 01755); err != nil {
-		return "", err
+		return err
 	}
 
 	if err := replicate(goRoot, newGoRoot, replicatePaths("src", "pkg/tool", "pkg/include")); err != nil {
-		return "", err
+		return err
 	}
 
-	return newGoRoot, nil
+	return nil
 }
 
 // stdliblist runs `go list -json` on the standard library and saves it to a file.
@@ -198,7 +196,8 @@ func stdliblist(args []string) error {
 	}
 	defer func() { cleanup() }()
 
-	cloneGoRoot, err := cloneGoRoot(goenv.sdk, cloneBase)
+	newGoRoot := filepath.Join(cloneBase, "go_sdk")
+	err = cloneGoRoot(abs(goenv.sdk), abs(newGoRoot))
 	if err != nil {
 		return fmt.Errorf("failed to clone new go root %v", err)
 	}
@@ -208,7 +207,7 @@ func stdliblist(args []string) error {
 		absPaths = append(absPaths, abs(path))
 	}
 	os.Setenv("PATH", strings.Join(absPaths, string(os.PathListSeparator)))
-	os.Setenv("GOROOT", cloneGoRoot)
+	os.Setenv("GOROOT", newGoRoot)
 	// Make sure we have an absolute path to the C compiler.
 	// TODO(#1357): also take absolute paths of includes and other paths in flags.
 	os.Setenv("CC", abs(os.Getenv("CC")))
