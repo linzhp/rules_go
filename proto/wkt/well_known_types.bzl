@@ -1,5 +1,3 @@
-_go_proto_library_suffix = "go_proto"
-
 # NOTE: since protobuf 3.14, the WKTs no longer use these paths. They're only
 # used by gogo below. Not clear if that actually works or if we should
 # continue supporting gogo.
