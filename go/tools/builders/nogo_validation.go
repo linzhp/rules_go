@@ -22,7 +22,7 @@ func nogoValidation(args []string) error {
 
 	_, err = os.ReadFile(fixFile)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading nogo fix %q: %w", fixFile, err)
 	}
 
 	if len(logContent) > 0 {
