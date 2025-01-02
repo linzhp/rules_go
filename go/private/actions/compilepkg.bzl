@@ -287,6 +287,7 @@ def _run_nogo(
     validation_args.add("nogovalidation")
     validation_args.add(out_validation)
     validation_args.add(out_log)
+    validation_args.add(out_fix)
     go.actions.run(
         inputs = [out_log, out_fix],
         outputs = [out_validation],
