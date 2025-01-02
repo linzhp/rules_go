@@ -6,6 +6,9 @@ import (
 )
 
 func nogoValidation(args []string) error {
+	if len(args) != 3 {
+		return fmt.Errorf("usage: nogovalidation <validation_output> <log_file> <fix_file>\n\tgot: %v+", os.Args)
+	}
 	validationOutput := args[0]
 	logFile := args[1]
 	// Always create the output file and only fail if the log file is non-empty to
