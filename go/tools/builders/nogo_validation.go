@@ -8,7 +8,6 @@ import (
 func nogoValidation(args []string) error {
 	validationOutput := args[0]
 	logFile := args[1]
-	fixFile := args[2]
 	// Always create the output file and only fail if the log file is non-empty to
 	// avoid an "action failed to create outputs" error.
 	logContent, err := os.ReadFile(logFile)
@@ -17,10 +16,8 @@ func nogoValidation(args []string) error {
 	}
 	err = os.WriteFile(validationOutput, logContent, 0755)
 	if err != nil {
-		return fmt.Errorf("%q: %w", fixFile, err)
+		return err
 	}
-
-
 	if len(logContent) > 0 {
 		// Separate nogo output from Bazel's --sandbox_debug message via an
 		// empty line.
