@@ -17,13 +17,9 @@ func nogoValidation(args []string) error {
 	}
 	err = os.WriteFile(validationOutput, logContent, 0755)
 	if err != nil {
-		return err
+		return fmt.Errorf("%q: %w", fixFile, err)
 	}
 
-	_, err = os.ReadFile(fixFile)
-	if err != nil {
-		return fmt.Errorf("reading nogo fix %q: %w", fixFile, err)
-	}
 
 	if len(logContent) > 0 {
 		// Separate nogo output from Bazel's --sandbox_debug message via an
