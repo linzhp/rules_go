@@ -278,7 +278,7 @@ def _run_nogo(
     )
 
     # TODO(zplin): replace this with real output.
-    go.actions.write(out_fix, "")
+    go.actions.write(out_fix, "some fixes")
 
     # This is a separate action that produces the validation output registered with Bazel. It
     # prints any nogo findings and, crucially, fails if there are any findings. This is necessary
