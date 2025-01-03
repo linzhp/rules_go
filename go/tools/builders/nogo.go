@@ -84,18 +84,14 @@ func nogo(args []string) error {
 		return err
 	}
 
-	return runNogo(workDir, nogoPath, goSrcs, ignoreSrcs, facts, importPath, importcfgPath, outFactsPath, outLogPath, outFixPath)
+	return runNogo(workDir, nogoPath, goSrcs, ignoreSrcs, facts, importPath, importcfgPath, outFactsPath, outLogPath)
 }
 
-func runNogo(workDir string, nogoPath string, srcs, ignores []string, facts []archive, packagePath, importcfgPath, outFactsPath, outLogPath, outFixPath string) error {
-	err := os.WriteFile(outFixPath, nil, 0o666)
-	if err != nil {
-		return fmt.Errorf("error writing empty nogo fix file: %v", err)
-	}
+func runNogo(workDir string, nogoPath string, srcs, ignores []string, facts []archive, packagePath, importcfgPath, outFactsPath string, outLogPath string) error {
 	if len(srcs) == 0 {
 		// emit_compilepkg expects a nogo facts file, even if it's empty.
 		// We also need to write the validation output log.
-		err = os.WriteFile(outFactsPath, nil, 0o666)
+		err := os.WriteFile(outFactsPath, nil, 0o666)
 		if err != nil {
 			return fmt.Errorf("error writing empty nogo facts file: %v", err)
 		}

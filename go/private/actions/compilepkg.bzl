@@ -246,7 +246,7 @@ def _run_nogo(
                      [archive.data.facts_file for archive in archives if archive.data.facts_file] +
                      [archive.data.export_file for archive in archives])
     inputs_transitive = [sdk.tools, sdk.headers, go.stdlib.libs]
-    outputs = [out_facts, out_log, out_fix]
+    outputs = [out_facts, out_log]
 
     nogo_args = go.tool_args(go)
     if cgo_go_srcs:
@@ -278,6 +278,9 @@ def _run_nogo(
         progress_message = "Running nogo on %{label}",
     )
 
+    # TODO(zplin): replace this with real output.
+    go.actions.write(out_fix, "")
+
     # This is a separate action that produces the validation output registered with Bazel. It
     # prints any nogo findings and, crucially, fails if there are any findings. This is necessary
     # to actually fail the build on nogo findings, which RunNogo doesn't do.
@@ -286,7 +289,6 @@ def _run_nogo(
     validation_args.add(out_validation)
     validation_args.add(out_log)
     validation_args.add(out_fix)
-
     go.actions.run(
         inputs = [out_log, out_fix],
         outputs = [out_validation],
