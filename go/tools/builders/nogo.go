@@ -84,7 +84,7 @@ func nogo(args []string) error {
 		return err
 	}
 
-	return runNogo(workDir, nogoPath, goSrcs, ignoreSrcs, facts, importPath, importcfgPath, outFactsPath, outLogPath, outFixPath)
+	return runNogo(workDir, nogoPath, goSrcs, ignoreSrcs, facts, importPath, importcfgPath, outFactsPath, outLogPath, "")
 }
 
 func runNogo(workDir string, nogoPath string, srcs, ignores []string, facts []archive, packagePath, importcfgPath, outFactsPath, outLogPath, outFixPath string) error {
